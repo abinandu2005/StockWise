@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 320" width="280" height="320">
+  <!-- Bottom-left cube -->
+  <g transform="translate(20, 140)">
+    <!-- Top face -->
+    <polygon points="60,0 120,30 60,60 0,30" fill="#5B8FB9" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Left face -->
+    <polygon points="0,30 60,60 60,140 0,110" fill="#4A7A9B" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Right face -->
+    <polygon points="120,30 60,60 60,140 120,110" fill="#3D6B8A" stroke="#1a1a2e" stroke-width="3"/>
+  </g>
+  <!-- Bottom-right cube -->
+  <g transform="translate(140, 140)">
+    <!-- Top face -->
+    <polygon points="60,0 120,30 60,60 0,30" fill="#5B8FB9" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Left face -->
+    <polygon points="0,30 60,60 60,140 0,110" fill="#4A7A9B" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Right face -->
+    <polygon points="120,30 60,60 60,140 120,110" fill="#3D6B8A" stroke="#1a1a2e" stroke-width="3"/>
+  </g>
+  <!-- Top cube -->
+  <g transform="translate(80, 30)">
+    <!-- Top face -->
+    <polygon points="60,0 120,30 60,60 0,30" fill="#6FA3C7" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Left face -->
+    <polygon points="0,30 60,60 60,140 0,110" fill="#5B8FB9" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Right face -->
+    <polygon points="120,30 60,60 60,140 120,110" fill="#4A7A9B" stroke="#1a1a2e" stroke-width="3"/>
+  </g>
+</svg>
