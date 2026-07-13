@@ -43,6 +43,10 @@ public class User {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = false;
+
     private LocalDateTime lastLogin;
 
     @Column(length = 50)
@@ -59,7 +63,7 @@ public class User {
     private LocalDateTime updatedAt;
 
 	public User(Long id, String fullName, String email, String password, String phoneNumber, Role role,
-			boolean isActive, LocalDateTime lastLogin, String employeeId, String companyName, LocalDateTime createdAt, LocalDateTime updatedAt) {
+			boolean isActive, boolean enabled, LocalDateTime lastLogin, String employeeId, String companyName, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		super();
 		this.id = id;
 		this.fullName = fullName;
@@ -68,6 +72,7 @@ public class User {
 		this.phoneNumber = phoneNumber;
 		this.role = role;
 		this.isActive = isActive;
+		this.enabled = enabled;
 		this.lastLogin = lastLogin;
 		this.employeeId = employeeId;
 		this.companyName = companyName;
@@ -129,6 +134,14 @@ public class User {
 
 	public void setActive(boolean isActive) {
 		this.isActive = isActive;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	public LocalDateTime getLastLogin() {

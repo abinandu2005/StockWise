@@ -305,7 +305,9 @@ export function DataProvider({ children }) {
       setNotifications([]);
       setActivityLogs([]);
       setStockLogs([]);
-      setRestockRequests([]);
+      // NOTE: restockRequests are intentionally NOT cleared on logout.
+      // They are stored in localStorage so managers can see requests
+      // submitted by warehouse staff across login sessions.
       setIsLoaded(false);
       setIsLoading(false);
       fetchGuards.current = {
@@ -965,11 +967,12 @@ export function DataProvider({ children }) {
   const deleteSalesOrder = useCallback(async (id) => {
     try {
       await del(`/sales-orders/${id}`);
-      setSalesOrders((prev) => prev.filter((o) => o.id !== id));
-      toast.success("Sales Order deleted.");
+      // Backend soft-deletes by setting status=CANCELLED, so reflect that in state
+      setSalesOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: "cancelled" } : o));
+      toast.success("Sales Order cancelled.");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete sales order: " + err.message);
+      toast.error("Failed to cancel sales order: " + err.message);
     }
   }, []);
 
@@ -988,9 +991,14 @@ export function DataProvider({ children }) {
         dispatchedBy: userName
       };
 
+      // Optimistically update local state immediately
+      setSalesOrders((prev) =>
+        prev.map((o) => o.id === id ? { ...o, status: "shipped", trackingNumber } : o)
+      );
+
       await post("/dispatch", dispatchPayload);
 
-      // Refresh sales orders
+      // Refresh from backend to confirm
       const soRes = await get("/sales-orders");
       if (soRes) {
         const list = soRes.content || soRes;

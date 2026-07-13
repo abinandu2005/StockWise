@@ -23,10 +23,17 @@ import com.stockwise.auth.dto.LoginRequest;
 import com.stockwise.auth.dto.RegisterRequest;
 import com.stockwise.auth.entity.Role;
 import com.stockwise.auth.entity.User;
+import com.stockwise.auth.entity.EmailVerificationOtp;
+import com.stockwise.auth.entity.PasswordResetOtp;
 import com.stockwise.auth.exception.EmailAlreadyExistsException;
+import com.stockwise.auth.exception.OtpException;
+import java.time.LocalDateTime;
+import com.stockwise.auth.repository.EmailVerificationOtpRepository;
+import com.stockwise.auth.repository.PasswordResetOtpRepository;
 import com.stockwise.auth.repository.RefreshTokenRepository;
 import com.stockwise.auth.repository.UserRepository;
 import com.stockwise.auth.security.JwtTokenProvider;
+import com.stockwise.auth.service.EmailService;
 
 /**
  * Unit tests for AuthService using JUnit 5 + Mockito.
@@ -38,6 +45,9 @@ class AuthServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private EmailVerificationOtpRepository emailVerificationOtpRepository;
+    @Mock private PasswordResetOtpRepository passwordResetOtpRepository;
+    @Mock private EmailService emailService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtTokenProvider jwtTokenProvider;
 
@@ -54,6 +64,7 @@ class AuthServiceTest {
                 .password("$2a$12$encodedPassword")
                 .role(Role.ADMIN)
                 .isActive(true)
+                .enabled(true)
                 .build();
     }
 
@@ -138,5 +149,108 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("deactivated");
+    }
+
+    @Test
+    @DisplayName("login — should throw when account is unverified (disabled)")
+    void login_unverifiedUser_throws() {
+        testUser.setEnabled(false);
+        LoginRequest request = new LoginRequest();
+        request.setEmail("admin@stockwise.com");
+        request.setPassword("admin123");
+
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessageContaining("verify your email");
+    }
+
+    @Test
+    @DisplayName("verifyEmail — should verify and enable user when OTP is valid")
+    void verifyEmail_success() {
+        testUser.setEnabled(false);
+        EmailVerificationOtp otp = EmailVerificationOtp.builder()
+                .email("admin@stockwise.com")
+                .otp("123456")
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+        when(emailVerificationOtpRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(otp));
+
+        authService.verifyEmail("admin@stockwise.com", "123456");
+
+        assertThat(testUser.isEnabled()).isTrue();
+        verify(userRepository).save(testUser);
+        verify(emailVerificationOtpRepository).delete(otp);
+    }
+
+    @Test
+    @DisplayName("verifyEmail — should throw OtpException when OTP is incorrect")
+    void verifyEmail_incorrectOtp_throws() {
+        testUser.setEnabled(false);
+        EmailVerificationOtp otp = EmailVerificationOtp.builder()
+                .email("admin@stockwise.com")
+                .otp("123456")
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+        when(emailVerificationOtpRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(otp));
+
+        assertThatThrownBy(() -> authService.verifyEmail("admin@stockwise.com", "654321"))
+                .isInstanceOf(OtpException.class)
+                .hasMessageContaining("Incorrect OTP");
+    }
+
+    @Test
+    @DisplayName("verifyEmail — should throw OtpException when OTP is expired")
+    void verifyEmail_expiredOtp_throws() {
+        testUser.setEnabled(false);
+        EmailVerificationOtp otp = EmailVerificationOtp.builder()
+                .email("admin@stockwise.com")
+                .otp("123456")
+                .expiryTime(LocalDateTime.now().minusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+        when(emailVerificationOtpRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(otp));
+
+        assertThatThrownBy(() -> authService.verifyEmail("admin@stockwise.com", "123456"))
+                .isInstanceOf(OtpException.class)
+                .hasMessageContaining("expired");
+    }
+
+    @Test
+    @DisplayName("forgotPassword — should generate and send OTP when email exists")
+    void forgotPassword_success() {
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+        when(passwordResetOtpRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.empty());
+
+        authService.forgotPassword("admin@stockwise.com");
+
+        verify(passwordResetOtpRepository).save(any(PasswordResetOtp.class));
+        verify(emailService).sendPasswordResetOtp(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("resetPassword — should update password and delete OTP when OTP is valid")
+    void resetPassword_success() {
+        PasswordResetOtp otp = PasswordResetOtp.builder()
+                .email("admin@stockwise.com")
+                .otp("654321")
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(testUser));
+        when(passwordResetOtpRepository.findByEmail("admin@stockwise.com")).thenReturn(Optional.of(otp));
+        when(passwordEncoder.encode("newPassword123")).thenReturn("newHashedPassword");
+
+        authService.resetPassword("admin@stockwise.com", "654321", "newPassword123");
+
+        assertThat(testUser.getPassword()).isEqualTo("newHashedPassword");
+        verify(userRepository).save(testUser);
+        verify(passwordResetOtpRepository).delete(otp);
     }
 }

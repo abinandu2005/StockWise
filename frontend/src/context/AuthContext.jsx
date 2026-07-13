@@ -115,7 +115,14 @@ export function AuthProvider({ children }) {
         name: u.fullName,
         email: u.email,
         role: ROLE_MAP[u.role] ?? "warehouse_staff",
-        status: (u.isActive ?? u.active) ? "active" : "inactive",
+        // pending = email verified but not yet admin-approved (enabled=true, isActive=false)
+        // inactive = not yet email-verified (enabled=false)
+        // active   = fully approved
+        status: (u.isActive ?? u.active)
+          ? "active"
+          : u.enabled
+            ? "pending"
+            : "inactive",
         employeeId: u.employeeId || `EMP-${1000 + u.id}`,
         companyName: u.companyName || "StockWise Network",
         lastLogin: u.lastLogin || null,
@@ -228,21 +235,25 @@ export function AuthProvider({ children }) {
         purchase_manager: "PURCHASE_MANAGER",
         warehouse_staff: "WAREHOUSE_STAFF",
       };
-      await authApi.register({
+      // Use the admin-create endpoint — bypasses OTP email verification entirely
+      // so users created by admin can login immediately
+      await post("/users/admin-create", {
         fullName: newUser.name,
         email: newUser.email,
-        password: newUser.password,
+        password: newUser.password || "StockWise@123",
         role: BACKEND_ROLE[newUser.role],
         phoneNumber: "+1234567890",
         employeeId: newUser.employeeId,
-        companyName: newUser.companyName
+        companyName: newUser.companyName,
+        isActive: newUser.status === "active" || newUser.status === undefined,
+        active: newUser.status === "active" || newUser.status === undefined,
       });
-      toast.success(`User "${newUser.name}" added successfully.`);
+      toast.success(`User "${newUser.name}" added successfully. They can login immediately.`);
       // Audit log
       await post("/analytics/audit-logs", {
         action: "USER_CREATED",
         module: "USER_MANAGEMENT",
-        description: `New user '${newUser.name}' (${newUser.role?.replace("_", " ")}) created with email ${newUser.email}`,
+        description: `New user '${newUser.name}' (${newUser.role?.replace("_", " ")}) created by admin with email ${newUser.email}`,
         entityId: newUser.email,
       }).catch(() => {});
       fetchUsers();

@@ -34,6 +34,46 @@ public class AuthController {
                 .body(ApiResponse.success("User registered successfully", user));
     }
 
+    @PostMapping("/verify-email")
+    @Operation(summary = "Verify account email with OTP")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully. You can now log in.", null));
+    }
+
+    @PostMapping("/resend-otp")
+    @Operation(summary = "Resend verification OTP email")
+    public ResponseEntity<ApiResponse<Void>> resendOtp(
+            @Valid @RequestBody ResendOtpRequest request) {
+        authService.resendVerificationOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("OTP sent successfully", null));
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request a password reset OTP")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("OTP sent successfully", null));
+    }
+
+    @PostMapping("/verify-forgot-password-otp")
+    @Operation(summary = "Verify forgot password OTP")
+    public ResponseEntity<ApiResponse<Void>> verifyForgotPasswordOtp(
+            @Valid @RequestBody VerifyForgotPasswordOtpRequest request) {
+        authService.verifyForgotPasswordOtp(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(ApiResponse.success("OTP verified successfully", null));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using OTP")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully. You can now log in with your new password.", null));
+    }
+
     @PostMapping("/login")
     @Operation(summary = "Login and receive JWT tokens")
     public ResponseEntity<ApiResponse<AuthResponse>> login(

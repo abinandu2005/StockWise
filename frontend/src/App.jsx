@@ -31,7 +31,7 @@ const StockAlertsPage = lazy(() => import("@/pages/StockAlertsPage"));
 const MyActivityPage = lazy(() => import("@/pages/MyActivityPage"));
 const RestockRequestsPage = lazy(() => import("@/pages/RestockRequestsPage"));
 
-const PageLoader = () => (
+const PageLoader = () => ( 
   <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
     <div className="relative w-12 h-12">
       <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>

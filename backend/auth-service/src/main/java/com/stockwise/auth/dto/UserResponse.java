@@ -19,6 +19,7 @@ public class UserResponse {
     private String phoneNumber;
     private String role;
     private boolean isActive;
+    private boolean enabled;
     private String employeeId;
     private String companyName;
     private LocalDateTime lastLogin;

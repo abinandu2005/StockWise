@@ -53,14 +53,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
+        String msg = ex.getMessage();
+        if (msg == null || msg.equalsIgnoreCase("Bad credentials") || msg.equalsIgnoreCase("Invalid credentials")) {
+            msg = "Invalid email or password";
+        }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid email or password"));
+                .body(ApiResponse.error(msg));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("Access denied: insufficient permissions"));
+    }
+
+    @ExceptionHandler(OtpException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOtpException(OtpException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

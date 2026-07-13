@@ -19,12 +19,18 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
 const statusCfg = {
-  pending: { label: "Pending", variant: "secondary" },
-  processing: { label: "Processing", variant: "default" },
-  shipped: { label: "Shipped", variant: "warning" },
-  delivered: { label: "Delivered", variant: "success" },
-  returned: { label: "Returned", variant: "destructive" },
+  pending:    { label: "Pending",    variant: "secondary" },
+  processing: { label: "Processing", variant: "outline" },
+  shipped:    { label: "Shipped",    variant: "warning" },
+  delivered:  { label: "Delivered",  variant: "success" },
+  returned:   { label: "Returned",   variant: "destructive" },
+  cancelled:  { label: "Cancelled",  variant: "destructive" },
+  completed:  { label: "Completed",  variant: "success" },
 };
+
+// Safe lookup — never returns undefined so badge always renders text
+const getStatusCfg = (status) =>
+  statusCfg[status?.toLowerCase()] ?? { label: status || "Unknown", variant: "outline" };
 
 function generateInvoicePDF(order) {
   const doc = new jsPDF();
@@ -248,8 +254,8 @@ export default function SalesOrdersPage() {
     await markSalesOrderShipped(id, `TRK-${Math.floor(100000000 + Math.random() * 900000000)}`);
   };
 
-  const handleMarkDelivered = (id, orderNumber) => {
-    updateSalesOrder(id, { status: "delivered", deliveredDate: new Date().toISOString().substring(0, 19) });
+  const handleMarkDelivered = async (id, orderNumber) => {
+    await updateSalesOrder(id, { status: "delivered", deliveredDate: new Date().toISOString().substring(0, 19) });
     toast.success(`Sales Order ${orderNumber} marked as DELIVERED.`);
   };
 
@@ -343,9 +349,14 @@ export default function SalesOrdersPage() {
                   <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{formatDate(o.orderDate)}</td>
                   <td className="px-4 py-3 text-right text-sm font-medium">{formatCurrency(o.totalAmount)}</td>
                   <td className="px-4 py-3 text-center">
-                    <Badge variant={statusCfg[o.status]?.variant} className="text-[10px] uppercase">
-                      {statusCfg[o.status]?.label}
-                    </Badge>
+                    {(() => {
+                      const cfg = getStatusCfg(o.status);
+                      return (
+                        <Badge variant={cfg.variant} className="text-[10px] uppercase">
+                          {cfg.label}
+                        </Badge>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3">
                     <DropdownMenu>
@@ -417,10 +428,15 @@ export default function SalesOrdersPage() {
               <div className="space-y-3 py-2">
                 <div className="grid grid-cols-2 gap-4 text-sm font-semibold">
                   <div>
-                    <p className="text-xs text-muted-foreground font-normal">Status</p>
-                    <Badge variant={statusCfg[viewOrder.status]?.variant} className="mt-1 uppercase">
-                      {statusCfg[viewOrder.status]?.label}
-                    </Badge>
+                     <p className="text-xs text-muted-foreground font-normal">Status</p>
+                    {(() => {
+                      const cfg = getStatusCfg(viewOrder.status);
+                      return (
+                        <Badge variant={cfg.variant} className="mt-1 uppercase">
+                          {cfg.label}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-normal">Total Bill</p>

@@ -22,7 +22,7 @@ public class RegisterRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @Pattern(regexp = "^[+]?[0-9]{10,15}$", message = "Invalid phone number")
+    @Pattern(regexp = "^$|^[+]?[0-9\\s-]{10,20}$", message = "Invalid phone number")
     private String phoneNumber;
 
     @NotBlank(message = "Role is required")

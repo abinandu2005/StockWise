@@ -180,6 +180,21 @@ export const authApi = {
   register: (payload) =>
     request("POST", "/auth/register", payload),
 
+  verifyEmail: (email, otp) =>
+    request("POST", "/auth/verify-email", { email, otp }),
+
+  resendOtp: (email) =>
+    request("POST", "/auth/resend-otp", { email }),
+
+  forgotPassword: (email) =>
+    request("POST", "/auth/forgot-password", { email }),
+
+  verifyForgotPasswordOtp: (email, otp) =>
+    request("POST", "/auth/verify-forgot-password-otp", { email, otp }),
+
+  resetPassword: (email, otp, newPassword) =>
+    request("POST", "/auth/reset-password", { email, otp, newPassword }),
+
   refresh: (refreshToken) =>
     request("POST", "/auth/refresh-token", { refreshToken }),
 
@@ -188,6 +203,8 @@ export const authApi = {
 
   me: () => request("GET", "/auth/me", undefined, true),
 };
+
+
 
 // ── Generic resource helpers ──────────────────────────────────
 

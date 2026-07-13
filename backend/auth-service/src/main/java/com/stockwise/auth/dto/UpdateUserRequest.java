@@ -10,6 +10,7 @@ public class UpdateUserRequest {
     private String phoneNumber;
     private Boolean isActive;
     private Boolean active;
+    private Boolean enabled;   // optional: set email-verified status
     private String role;       // optional role change (ADMIN, PURCHASE_MANAGER, WAREHOUSE_STAFF)
     private String password;   // optional password reset
     private String employeeId;
